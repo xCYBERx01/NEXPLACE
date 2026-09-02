@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useRef } from "react"
 import React from "react"
 import * as THREE from "three"
 import { Canvas, useThree, useFrame } from "@react-three/fiber"
-import { Environment, ContactShadows, Html } from "@react-three/drei"
+import { Environment, ContactShadows, Html, SoftShadows } from "@react-three/drei"
+import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing"
 import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
@@ -188,11 +189,16 @@ function Grounds() {
 }
 
 // ---- Scroll camera rig ------------------------------------------------------
+function smoothstep(p) {
+  const t = Math.max(0, Math.min(1, p))
+  return t * t * (3 - 2 * t)
+}
+
 function samplingLerp(arr, p, out) {
   const spans = arr.length - 1
   const f = Math.max(0, Math.min(1, p)) * spans
   const i = Math.min(Math.floor(f), spans - 1)
-  const t = f - i
+  const t = smoothstep(f - i)
   out.lerpVectors(arr[i], arr[i + 1], t)
   return out
 }
@@ -215,7 +221,8 @@ function DollyCameraRig({ fpsActive, onReachInside }) {
       new THREE.Vector3(0, 1.8, -1),
       new THREE.Vector3(0, 1.6, -3),
       new THREE.Vector3(0, 1.5, -3)
-    ]
+    ],
+    fov: [55, 52, 58, 62]
   }), [])
 
   useEffect(() => {
@@ -243,9 +250,19 @@ function DollyCameraRig({ fpsActive, onReachInside }) {
     samplingLerp(keyframes.look, p, tmpLook)
     camera.position.copy(tmpPos)
     camera.lookAt(tmpLook)
+    const fov = lerpKeyframes(keyframes.fov, p)
+    if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix() }
   })
 
   return null
+}
+
+function lerpKeyframes(arr, p) {
+  const spans = arr.length - 1
+  const f = Math.max(0, Math.min(1, p)) * spans
+  const i = Math.min(Math.floor(f), spans - 1)
+  const t = smoothstep(f - i)
+  return arr[i] * (1 - t) + arr[i + 1] * t
 }
 
 function useSmoothScroll(active) {
@@ -302,11 +319,13 @@ export default function App() {
 
         <div className="app-viewport">
           {flash > 0 && <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#fff", opacity: flash, pointerEvents: "none", transition: "opacity 0.3s ease" }} />}
-          <Canvas shadows camera={{ position: [0, 5.0, 15], fov: 55 }} gl={{ antialias: true }}>
+          <Canvas shadows camera={{ position: [0, 5.0, 15], fov: 55 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}>
             <color attach="background" args={["#e8ecf1"]} />
-            <ambientLight intensity={1.0} />
-            <directionalLight position={[12, 16, 10]} intensity={1.3} castShadow shadowMapSize={[2048, 2048]} />
-            <directionalLight position={[-6, 8, -4]} intensity={0.4} />
+            <SoftShadows size={20} samples={16} focus={0} />
+            <ambientLight intensity={0.5} />
+            <hemisphereLight args={["#dfe8f0", "#38424e", 0.5]} />
+            <directionalLight position={[12, 16, 10]} intensity={2.2} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} />
+            <directionalLight position={[-6, 8, -4]} intensity={0.7} color="#aec6dd" />
             <Environment preset="city" />
             <Grounds />
             <Physics gravity={[0, -9.81, 0]}>
@@ -315,8 +334,12 @@ export default function App() {
                 <Interior fps={fps} />
               </React.Suspense>
             </Physics>
-            <ContactShadows position={[0, -0.02, 0]} opacity={0.25} scale={30} blur={2.5} />
+            <ContactShadows position={[0, -0.02, 0]} opacity={0.35} scale={30} blur={2.2} far={4} />
             {!fps && <DollyCameraRig fpsActive={fps} onReachInside={enter} />}
+            <EffectComposer multisampling={4}>
+              <Bloom intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.2} mipmapBlur />
+              <Vignette eskil={false} offset={0.18} darkness={0.72} />
+            </EffectComposer>
           </Canvas>
         </div>
 
