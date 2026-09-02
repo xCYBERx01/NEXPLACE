@@ -1,7 +1,13 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import React from "react"
-import { Canvas } from "@react-three/fiber"
+import * as THREE from "three"
+import { Canvas, useThree, useFrame } from "@react-three/fiber"
 import { Environment, ContactShadows, Html } from "@react-three/drei"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import Lenis from "lenis"
+
+gsap.registerPlugin(ScrollTrigger)
 
 const Workshop = React.lazy(() => import("./Workshop"))
 const Joystick = React.lazy(() => import("./Joystick"))
@@ -162,19 +168,97 @@ function CreatorHQ({ entering }) {
   )
 }
 
+// Scrubs the exterior camera from a wide hero shot toward the entrance along
+// the page's scroll progress (0 -> 1), driven by GSAP ScrollTrigger + Lenis.
+function ExteriorCameraRig() {
+  const { camera } = useThree()
+  const progress = useRef({ v: 0 })
+  const tmpPos = useMemo(() => new THREE.Vector3(), [])
+  const tmpLook = useMemo(() => new THREE.Vector3(), [])
+
+  const keyframes = useMemo(() => ({
+    pos: [
+      new THREE.Vector3(0, 5.2, 14),   // wide hero
+      new THREE.Vector3(2.5, 3.4, 9),  // lower, closer
+      new THREE.Vector3(1.8, 1.7, 6.1) // at the entrance
+    ],
+    look: [
+      new THREE.Vector3(0, 2, 0),
+      new THREE.Vector3(1.5, 1.6, 0),
+      new THREE.Vector3(1.5, 1.2, 0)
+    ]
+  }), [])
+
+  useEffect(() => {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: "#scroll-track",
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1
+      }
+    })
+    tl.to(progress.current, { v: 1, ease: "none" }, 0)
+    return () => {
+      tl.scrollTrigger && tl.scrollTrigger.kill()
+      tl.kill()
+    }
+  }, [])
+
+  useFrame(() => {
+    const p = progress.current.v
+    samplingLerp(keyframes.pos, p, tmpPos)
+    samplingLerp(keyframes.look, p, tmpLook)
+    camera.position.copy(tmpPos)
+    camera.lookAt(tmpLook)
+    camera.updateProjectionMatrix()
+  })
+
+  return null
+}
+
+function samplingLerp(arr, p, out) {
+  const spans = arr.length - 1
+  const f = Math.max(0, Math.min(1, p)) * spans
+  const i = Math.min(Math.floor(f), spans - 1)
+  const t = f - i
+  out.lerpVectors(arr[i], arr[i + 1], t)
+  return out
+}
+
+// Lenis smooth scroll + ScrollTrigger sync. Only active while we're on the
+// exterior (scrollable) phase; disabled inside the workshop.
+function useSmoothScroll(active) {
+  useEffect(() => {
+    if (!active) return
+    const lenis = new Lenis({ smoothWheel: true })
+    lenis.on("scroll", ScrollTrigger.update)
+    const raf = (time) => lenis.raf(time * 1000)
+    gsap.ticker.add(raf)
+    gsap.ticker.lagSmoothing(0)
+    return () => {
+      gsap.ticker.remove(raf)
+      lenis.destroy()
+    }
+  }, [active])
+}
+
 export default function App() {
   const [phase, setPhase] = useState("exterior")
   const [entering, setEntering] = useState(false)
   const [flash, setFlash] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
 
+  useSmoothScroll(phase === "exterior")
+
   useEffect(() => { setIsMobile(window.matchMedia("(max-width: 768px)").matches) }, [])
   useEffect(() => {
-    function onKey(e) {
-      if (e.key === "Escape" && phase === "interior") setPhase("exterior")
+    if (phase === "interior") {
+      document.documentElement.style.overflow = "hidden"
+    } else {
+      document.documentElement.style.overflow = ""
     }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
+    return () => { document.documentElement.style.overflow = "" }
   }, [phase])
 
   function doEnter() {
@@ -184,13 +268,13 @@ export default function App() {
   }
 
   return (
-    <div style={{ background: "#0A0F14", height: "100vh", overflow: "hidden", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100dvh", fontFamily: "Inter, system-ui, sans-serif" }}>
       {flash > 0 && <div style={{ position: "fixed", inset: 0, zIndex: 80, background: "#fff", opacity: flash, pointerEvents: "none", transition: "opacity 0.5s ease" }} />}
 
       <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 30, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", background: "rgba(10,15,20,0.75)", backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.08)", fontFamily: "JetBrains Mono, monospace", fontSize: 11, color: "#8a9aae" }}>
         <span>NEXPLACE · CREATOR HQ</span>
         <span style={{ color: phase === "exterior" ? "#7ccfc7" : "#E95420" }}>
-          {phase === "exterior" ? "OUTSIDE — APPROACH THE ENTRANCE" : "INSIDE — WASD MOVE · CLICK LOOK · E INTERACT · ESC OUT"}
+          {phase === "exterior" ? "SCROLL TO APPROACH · ENTER THE CREATOR HQ" : "INSIDE — WASD MOVE · CLICK LOOK · E RESUME"}
         </span>
       </header>
 
@@ -199,9 +283,10 @@ export default function App() {
           Ahmed Irfan Akrami · Robotics & AI Engineer Portfolio
         </h1>
 
-        {phase === "exterior" ? (
-          <div style={{ height: "100%", paddingTop: 40 }}>
-            <Canvas shadows camera={{ position: [16, 6, 15], fov: 42 }} gl={{ antialias: true }} frameloop="demand">
+        {/* Fixed full-viewport canvas layer */}
+        <div className="app-viewport">
+          {phase === "exterior" ? (
+            <Canvas shadows camera={{ position: [0, 5.2, 14], fov: 55 }} gl={{ antialias: true }}>
               <color attach="background" args={["#e8ecf1"]} />
               <ambientLight intensity={1.0} />
               <directionalLight position={[12, 16, 10]} intensity={1.4} castShadow shadowMapSize={[2048, 2048]} />
@@ -209,29 +294,39 @@ export default function App() {
               <Environment preset="city" />
               <CreatorHQ entering={entering} />
               <ContactShadows position={[0, -0.01, 0]} opacity={0.3} scale={30} blur={2.5} />
+              <ExteriorCameraRig />
             </Canvas>
-            <div style={{ position: "absolute", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#0A0F14", color: "#fff", padding: "14px 22px", borderRadius: 12, display: "flex", gap: 16, alignItems: "center", boxShadow: "0 12px 32px rgba(0,0,0,0.3)", zIndex: 20 }}>
-              <span style={{ fontSize: 14 }}>Explore the new Robotics & Engineering hub</span>
-              <button onClick={doEnter} aria-label="Enter building" style={{ padding: "11px 24px", background: ACCENT, color: "#fff", border: 0, borderRadius: 999, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>Enter →</button>
-            </div>
-          </div>
-        ) : (
-          <div id="workshop" style={{ height: "100%", paddingTop: 40 }}>
+          ) : (
             <React.Suspense fallback={<div style={{ color: "#fff", height: "100%", display: "grid", placeItems: "center" }}>Loading Workshop...</div>}>
-              <Canvas shadows camera={{ position: [0, 2, 10], fov: 60 }} gl={{ antialias: true }}>
+              <Canvas shadows camera={{ position: [0, 2, 10], fov: 62 }} gl={{ antialias: true }}>
                 <color attach="background" args={["#0A0F14"]} />
                 <ambientLight intensity={0.6} />
                 <directionalLight position={[6, 10, 4]} intensity={1.0} castShadow shadowMapSize={[2048, 2048]} />
                 <Workshop />
               </Canvas>
             </React.Suspense>
-            {isMobile && (
-              <React.Suspense fallback={null}>
-                <Joystick />
-              </React.Suspense>
-            )}
-            <button onClick={() => setPhase("exterior")} aria-label="Go outside" style={{ position: "absolute", bottom: 20, left: 20, zIndex: 20, padding: "10px 16px", background: "rgba(255,255,255,0.1)", border: "1px solid #2a333e", color: "#e6eef4", borderRadius: 999, fontSize: 12, cursor: "pointer" }}>← Outside</button>
+          )}
+        </div>
+
+        {phase === "exterior" && (
+          <div id="scroll-track" style={{ position: "relative", zIndex: -1, height: "400vh", pointerEvents: "none" }} />
+        )}
+
+        {phase === "exterior" && (
+          <div style={{ position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)", background: "#0A0F14", color: "#fff", padding: "14px 22px", borderRadius: 12, display: "flex", gap: 16, alignItems: "center", boxShadow: "0 12px 32px rgba(0,0,0,0.3)", zIndex: 20 }}>
+            <span style={{ fontSize: 14 }}>Explore the new Robotics &amp; Engineering hub</span>
+            <button onClick={doEnter} aria-label="Enter building" style={{ padding: "11px 24px", background: ACCENT, color: "#fff", border: 0, borderRadius: 999, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>Enter →</button>
           </div>
+        )}
+
+        {phase === "interior" && isMobile && (
+          <React.Suspense fallback={null}>
+            <Joystick />
+          </React.Suspense>
+        )}
+
+        {phase === "interior" && (
+          <button onClick={() => setPhase("exterior")} aria-label="Go outside" style={{ position: "fixed", bottom: 20, left: 20, zIndex: 20, padding: "10px 16px", background: "rgba(255,255,255,0.1)", border: "1px solid #2a333e", color: "#e6eef4", borderRadius: 999, fontSize: 12, cursor: "pointer" }}>← Outside</button>
         )}
       </main>
     </div>

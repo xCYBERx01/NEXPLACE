@@ -17,8 +17,9 @@ An immersive, game-like portfolio for **Ahmed Irfan Akrami**, a Robotics & AI en
   - Project shelf with miniature project models
   - **Croc OS** tank (chain wheels, OLED face, N20 motors)
   - NPC robot + ceiling lighting
-- **Camera flow** — exterior approach → enter door → blinding white flash → interior.
-- **First-person navigation** — WASD move, pointer-lock mouse look, `Space` jump, `Shift` run, `E` interact, `Esc` exit to exterior.
+- **Camera flow** — scroll to scrub the exterior camera from a wide hero shot down to the entrance → `Enter` → blinding white flash → interior (first-person).
+- **First-person navigation** — WASD move, pointer-lock mouse look, `Space` jump, `Shift` run, `E` open resume near the desk.
+- **Scroll** — Lenis smooth scroll + GSAP ScrollTrigger scrub a fixed full-viewport canvas over a 400vh track.
 - **Mobile fallback** — virtual joystick + "skip to portfolio" link.
 - **SEO/technical** — semantic `index.html`, Open Graph, Twitter Cards, JSON-LD structured data, `robots.txt`, `sitemap.xml`, `llms.txt`, PWA `manifest.json`, favicons, custom `404.html`.
 
@@ -33,6 +34,7 @@ An immersive, game-like portfolio for **Ahmed Irfan Akrami**, a Robotics & AI en
 | 3D | three 0.185, @react-three/fiber 9, @react-three/drei 10 |
 | Physics | @react-three/rapier 2 |
 | Character controller | ecctrl |
+| Scroll | GSAP + ScrollTrigger, Lenis |
 | Lint | oxlint |
 
 > **Note on Vite 8:** Vite 8 (Rolldown) previously emitted `Could not load index.html — stream did not contain valid UTF-8` on Windows. The project pins Vite **7** (esbuild-based production build) to avoid this regression. Upgrade once the upstream bug is resolved.
