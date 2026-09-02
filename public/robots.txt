@@ -1,0 +1,19 @@
+# robots.txt for NEXPLACE
+# https://nexplace.vercel.app/
+
+User-agent: *
+Allow: /
+
+# Disallow private/admin paths
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+
+# Sitemap
+Sitemap: https://nexplace.vercel.app/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 10
+
+# Host
+Host: nexplace.vercel.app

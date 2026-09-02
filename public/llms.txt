@@ -1,0 +1,101 @@
+# NEXPLACE — Ahmed Irfan Akrami Portfolio
+# https://nexplace.vercel.app/
+
+## About
+This is the personal portfolio of Ahmed Irfan Akrami — Robotics & AI Engineer, NRL 007 VoltEdge team member, creator of Croc OS (ESP32/SH1106).
+
+## About the Person
+- Name: Ahmed Irfan Akrami
+- Title: Robotics & AI Engineer
+- Affiliation: NRL Team VoltEdge 007 (IIT Bombay)
+- Email: iahmedakrami@gmail.com
+- Location: Karnataka, India
+- GitHub: https://github.com/xCYBERx01
+- LinkedIn: https://linkedin.com/in/ahmedirfanak
+
+## Key Projects
+
+### Croc OS
+- ESP32-based desk companion with animated OLED face (SH1106 128x64)
+- Dual N20 motors with chain tracks
+- OLED face with animated expressions
+- Touch sensors, WiFi, NTP time sync
+- Persistent NVS storage
+- Arduino/C++, Adafruit GFX, ArduinoJson
+
+### EdgeBot (NRL 007 VoltEdge)
+- Competition robot for NRL 2025 at IIT Bombay
+- Mechanical lead: chassis, arm/gripper assembly, torque balancing
+- Custom chassis, robotic arm + gripper assembly
+- Torque-balanced drivetrain and manipulator
+
+### Meadow
+- Agent-based predator-prey ecosystem simulator
+- Lotka-Volterra population dynamics
+- JavaScript, Canvas rendering
+- Embedded as live widget in portfolio
+
+### Kharcha Expense Tracker
+- UPI, cash, card transaction tracking
+- Auto-categorization
+- Donut chart visualization
+- Local JSON persistence
+
+### AI Sports Tournament Engine
+- Full-stack tournament management
+- Next.js, Supabase (Auth + Realtime), PostgreSQL
+- Google Gemini API for AI insights
+- Live scoring, standings, AI-generated insights
+
+### Wildlife Card Game
+- Flutter/Firebase Android app
+- AI species identification from photos
+- Collectible digital cards
+- Real-world biodiversity gamification
+
+### IoT Telemetry Dashboard
+- Ground control for robotics
+- 50Hz MQTT telemetry
+- Live PID graphs, joystick overrides
+- ESP32, Mosquitto, Node.js, InfluxDB, Next.js/Recharts
+
+### Automatic Field Shutter + Rainwater Harvesting
+- Automated agricultural shutter
+- Environmental/moisture sensing
+- Rainwater collection routing
+- Microcontroller-based control
+
+### Drone
+- Multirotor build
+- Custom airframe, motor/ESC, flight controller, radio link
+- Battery power system
+
+### 6-Wheel Moon Rover
+- 6-wheel drive (6x DC geared motors)
+- ESP32, OLED status display
+- RF remote, WiFi/app control, line-following autonomous
+
+### Field Shutter + Rainwater Analytics
+- Batched ESP32 logging
+- Pandas trend analysis
+- Rainwater yield reporting
+- FastAPI, Pandas, PostgreSQL, React/Chart.js
+
+### ProjectDirec
+- Robotics parts directory
+- Next.js SSR, Python Scrapy, Typesense/Algolia
+- Pinout diagrams, compatibility checker
+- Cross-vendor price tracking
+
+## Skills
+- Languages: C/C++, Python, JavaScript, TypeScript
+- Embedded & Hardware: ESP32, Arduino, I2C, Sensor Integration, Motor Drivers, Circuit Debugging
+- Frameworks & Tools: React, Next.js, Flutter, Git/GitHub
+- Cloud & Backend: Supabase, Firebase, PostgreSQL
+- AI: Gemini API, Computer Vision (species/object identification)
+
+## Contact
+- Email: iahmedakrami@gmail.com
+- GitHub: https://github.com/xCYBERx01
+- LinkedIn: https://linkedin.com/in/ahmedirfanak
+- Portfolio: https://nexplace.vercel.app/
