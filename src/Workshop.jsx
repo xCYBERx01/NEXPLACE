@@ -1,5 +1,6 @@
-import { useState } from "react"
-import { Html, PointerLockControls, KeyboardControls } from "@react-three/drei"
+import { useState, useEffect } from "react"
+import { useThree } from "@react-three/fiber"
+import { Html, KeyboardControls } from "@react-three/drei"
 import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier"
 import Ecctrl from "ecctrl"
 
@@ -37,12 +38,24 @@ function WorkshopRoom() {
           </mesh>
         </RigidBody>
       ))}
+      {/* Ceiling so the room is a real enclosed space (not a black void) */}
+      <RigidBody type="fixed" colliders="cuboid">
+        <mesh position={[0, 5, 0]}>
+          <boxGeometry args={[22, 0.3, 22]} />
+          <meshStandardMaterial color="#d8dde3" roughness={0.9} />
+        </mesh>
+      </RigidBody>
+      {/* Ceiling light fixtures (emissive planes) + real point lights */}
       {[-4, 0, 4].map((x) => (
         <mesh key={x} position={[x, 4.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.6, 0.4]} />
           <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.4} />
         </mesh>
       ))}
+      {[-4, 0, 4].map((x) => (
+        <pointLight key={x} position={[x, 4.2, 0]} intensity={30} distance={18} decay={2} color="#ffffff" />
+      ))}
+      <pointLight position={[0, 2.5, 6]} intensity={12} distance={10} decay={2} color="#7ccfc7" />
       <mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[22, 22]} />
         <meshStandardMaterial color="#000000" transparent opacity={0.05} depthWrite={false} />
@@ -115,6 +128,22 @@ function DeskLabel({ text, y = 0.9 }) {
       }}>{text}</div>
     </Html>
   )
+}
+
+// Click the canvas to lock the pointer; ecctrl's follow-cam listens to document
+// mousemove and rotates only when document.pointerLockElement is set (or on drag),
+// so this enables real FPS mouse-look without a separate PointerLockControls.
+function EnablePointerLock() {
+  const { gl } = useThree()
+  useEffect(() => {
+    const dom = gl.domElement
+    const onClick = () => {
+      if (!document.pointerLockElement) dom.requestPointerLock()
+    }
+    dom.addEventListener("click", onClick)
+    return () => dom.removeEventListener("click", onClick)
+  }, [gl])
+  return null
 }
 
 function GamingStation() {
@@ -466,6 +495,25 @@ function CrocTank() {
 
 export default function Workshop() {
   const [showResume, setShowResume] = useState(false)
+  const { camera } = useThree()
+  useEffect(() => {
+    function onKey(e) {
+      if (e.code === "KeyE") {
+        // Paperwork desk sits at [4, 0.9, -3.5] — open resume when close enough.
+        const dx = camera.position.x - 4
+        const dz = camera.position.z - -3.5
+        if (Math.hypot(dx, dz) < 1.9) {
+          setShowResume(v => {
+            const next = !v
+            if (next && document.pointerLockElement) document.exitPointerLock()
+            return next
+          })
+        }
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [camera])
   return (
     <Physics gravity={[0, -9.81, 0]}>
       <WorkshopRoom />
@@ -517,14 +565,26 @@ export default function Workshop() {
         { name: "jump", keys: ["Space"] },
         { name: "run", keys: ["ShiftLeft", "ShiftRight"] }
       ]}>
-        <Ecctrl position={[0, 1.3, 6]} camInitDis={-4} camMaxDis={-6} maxVelLimit={5} autoBalance>
+        <Ecctrl
+          position={[0, 1.3, 6]}
+          camCollision={false}
+          camInitDis={-0.01}
+          camMinDis={-0.01}
+          camFollowMult={1000}
+          camLerpMult={1000}
+          turnVelMultiplier={1}
+          turnSpeed={100}
+          mode="CameraBasedMovement"
+          maxVelLimit={4}
+          autoBalance
+        >
           <mesh castShadow>
             <capsuleGeometry args={[0.26, 0.75, 8, 16]} />
             <meshStandardMaterial color={ACCENT} roughness={0.3} metalness={0.2} />
           </mesh>
         </Ecctrl>
       </KeyboardControls>
-      <PointerLockControls />
+      <EnablePointerLock />
       {showResume && (
         <Html fullscreen>
           <div style={{
