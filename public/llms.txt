@@ -1,8 +1,8 @@
-# NEXPLACE — Ahmed Irfan Akrami Portfolio
+# NEXPLACE â€” Ahmed Irfan Akrami Portfolio
 # https://nexplace.vercel.app/
 
 ## About
-This is the personal portfolio of Ahmed Irfan Akrami — Robotics & AI Engineer, NRL 007 VoltEdge team member, creator of Croc OS (ESP32/SH1106).
+This is the personal portfolio of Ahmed Irfan Akrami â€” Robotics & AI Engineer, NRL 007 VoltEdge team member, creator of Croc OS (ESP32/SH1106).
 
 ## About the Person
 - Name: Ahmed Irfan Akrami

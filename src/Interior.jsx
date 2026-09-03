@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, Suspense } from "react"
+import * as THREE from "three"
 import { useThree } from "@react-three/fiber"
-import { Html, KeyboardControls, RoundedBox } from "@react-three/drei"
+import { Html, KeyboardControls, RoundedBox, useGLTF } from "@react-three/drei"
 import { RigidBody } from "@react-three/rapier"
 import Ecctrl from "ecctrl"
 
@@ -11,8 +12,6 @@ const WOOD_TOP = { color: "#a97e50", roughness: 0.35, metalness: 0.05 }
 const WOOD_DARK = { color: "#6d5133", roughness: 0.4, metalness: 0.05 }
 const METAL_BLACK = { color: "#1c1f24", roughness: 0.35, metalness: 0.6 }
 const METAL_GREY = { color: "#4a4f57", roughness: 0.4, metalness: 0.7 }
-const SCREEN = { color: "#05070c", roughness: 0.1, metalness: 0.4, emissive: "#12233a", emissiveIntensity: 0.8 }
-const PLASTIC_MAT = { color: "#23262b", roughness: 0.5 }
 
 function Desk({ position, w = 2.2, d = 0.9, color = WOOD_TOP, children }) {
   const halfW = w / 2
@@ -58,39 +57,31 @@ function EnablePointerLock() {
   return null
 }
 
-function GamingStation({ position }) {
-  const monitorX = [-0.55, 0, 0.55]
+// Loads a GLB and normalizes it: recenters x/z, sits it on the floor (y=0),
+// and scales to a target height. This makes any source model (even ones with
+// odd internal node scales) drop in predictably.
+function NormalizedModel({ url, position, rotation = [0, 0, 0], targetHeight }) {
+  const { scene } = useGLTF(url)
+  const normalized = useMemo(() => {
+    const clone = scene.clone(true)
+    const box = new THREE.Box3().setFromObject(clone)
+    const size = new THREE.Vector3()
+    box.getSize(size)
+    const center = new THREE.Vector3()
+    box.getCenter(center)
+    const s = targetHeight ? targetHeight / size.y : 1
+    clone.scale.setScalar(s)
+    clone.position.set(-center.x * s, -box.min.y * s, -center.z * s)
+    return clone
+  }, [scene, targetHeight])
+  return <group position={position} rotation={rotation}><primitive object={normalized} /></group>
+}
+
+function DeskFallback() {
   return (
-    <Desk position={position} w={2.6} d={0.85} color={WOOD_TOP}>
-      {monitorX.map((x, i) => (
-        <group key={i} position={[x, 0.55, 0]}>
-          <RoundedBox args={[0.68, 0.42, 0.025]} radius={0.01} smoothness={3} castShadow>
-            <meshStandardMaterial {...SCREEN} />
-          </RoundedBox>
-          <mesh position={[0, -0.25, 0.02]}>
-            <cylinderGeometry args={[0.03, 0.03, 0.2, 10]} />
-            <meshStandardMaterial {...METAL_BLACK} />
-          </mesh>
-          <mesh position={[0, -0.36, 0]}>
-            <cylinderGeometry args={[0.1, 0.1, 0.03, 12]} />
-            <meshStandardMaterial {...METAL_BLACK} />
-          </mesh>
-        </group>
-      ))}
-      <group position={[1.02, 0.42, 0]}>
-        <RoundedBox args={[0.26, 0.62, 0.5]} radius={0.02} smoothness={3} castShadow>
-          <meshStandardMaterial {...METAL_BLACK} />
-        </RoundedBox>
-        <mesh position={[0, -0.02, -0.25]}>
-          <planeGeometry args={[0.16, 0.42]} />
-          <meshStandardMaterial color="#7ccfc7" emissive="#7ccfc7" emissiveIntensity={1.6} />
-        </mesh>
-      </group>
-      <RoundedBox args={[0.5, 0.025, 0.16]} radius={0.01} smoothness={2} position={[0, 0.05, -0.2]} castShadow>
-        <meshStandardMaterial {...PLASTIC_MAT} />
-      </RoundedBox>
-      <DeskLabel text="GAMING WORKSTATION · 3 MONITORS" />
-    </Desk>
+    <RoundedBox args={[2.2, 0.07, 0.8]} radius={0.03} smoothness={4} castShadow receiveShadow position={[0, 0.9, 0]}>
+      <meshStandardMaterial {...WOOD_TOP} />
+    </RoundedBox>
   )
 }
 
@@ -289,7 +280,12 @@ export default function Interior({ fps }) {
       ))}
       <pointLight position={[0, 2.2, 3]} intensity={12} distance={9} decay={2} color="#7ccfc7" />
 
-      <GamingStation position={[-4, 0.9, -4]} />
+      <group position={[-3.4, 0, -4]}>
+        <Suspense fallback={<DeskFallback />}>
+          <NormalizedModel url="/assets/desk.glb" />
+        </Suspense>
+        <DeskLabel text="WORKSTATION · DESK + CHAIR + SCREEN" y={1.7} />
+      </group>
       <PaperworkDesk position={[4, 0.9, -4]} onOpen={() => setShowResume(true)} />
       <MakerBench position={[-4.2, 0.9, 1.2]} rotY={Math.PI / 2} />
       <ProjectShelf position={[4, 0, 1]} rotY={-Math.PI / 2} />
