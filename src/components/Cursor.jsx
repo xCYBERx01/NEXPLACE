@@ -1,51 +1,69 @@
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
+import * as THREE from "three"
 
-// Custom dot + trailing ring cursor (fine pointers only).
-export default function Cursor() {
-  const dotRef = useRef(null)
-  const ringRef = useRef(null)
+function CursorMesh() {
+  const { pointer } = useThree()
+  const meshRef = useRef()
 
-  useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) return
-    const dot = dotRef.current
-    const ring = ringRef.current
-    if (!dot || !ring) return
+  const physics = useRef({
+    pos: new THREE.Vector2(0, 0),
+    vel: new THREE.Vector2(0, 0),
+    spring: 0.15,
+    friction: 0.8
+  })
 
-    let x = -100
-    let y = -100
-    let rx = -100
-    let ry = -100
-    let raf = 0
-    let hovering = false
+  useFrame(() => {
+    const p = physics.current
 
-    const onMove = (e) => {
-      x = e.clientX
-      y = e.clientY
-      const t = e.target
-      hovering = !!(t && t.closest && t.closest("a,button,[data-hover]"))
-      dot.style.opacity = "1"
-      ring.style.opacity = "1"
+    // Target position is the pointer
+    const targetX = pointer.x
+    const targetY = pointer.y
+
+    // Spring physics: Accel = (Target - Pos) * Spring
+    const ax = (targetX - p.pos.x) * p.spring
+    const ay = (targetY - p.pos.y) * p.spring
+
+    p.vel.x += ax
+    p.vel.y += ay
+    p.vel.multiplyScalar(p.friction)
+
+    p.pos.x += p.vel.x
+    p.pos.y += p.vel.y
+
+    if (meshRef.current) {
+      meshRef.current.position.set(p.pos.x, p.pos.y, 0)
+
+      // Velocity-based stretch
+      const speed = p.vel.length()
+      const stretch = 1 + speed * 2
+
+      // Rotate mesh to align with velocity
+      const angle = Math.atan2(p.vel.y, p.vel.x)
+      meshRef.current.rotation.z = angle
+      meshRef.current.scale.set(stretch, 1, 1)
     }
-    const loop = () => {
-      rx += (x - rx) * 0.16
-      ry += (y - ry) * 0.16
-      dot.style.transform = `translate(${x}px, ${y}px)`
-      ring.style.transform = `translate(${rx}px, ${ry}px) scale(${hovering ? 1.8 : 1})`
-      ring.style.borderColor = hovering ? "#2f9e92" : "rgba(255,255,255,0.5)"
-      raf = requestAnimationFrame(loop)
-    }
-    window.addEventListener("mousemove", onMove, { passive: true })
-    raf = requestAnimationFrame(loop)
-    return () => {
-      window.removeEventListener("mousemove", onMove)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
+  })
 
   return (
-    <>
-      <div ref={dotRef} className="cursor-dot" aria-hidden />
-      <div ref={ringRef} className="cursor-ring" aria-hidden />
-    </>
+    <mesh ref={meshRef}>
+      <planeGeometry args={[0.04, 0.01]} />
+      <meshBasicMaterial color="#2f9e92" transparent opacity={0.8} />
+    </mesh>
+  )
+}
+
+export default function Cursor() {
+  return (
+    <div className="cursor-layer" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999 }}>
+      <Canvas
+      className="cursor-canvas"
+        orthographic
+        camera={{ zoom: 1, position: [0, 0, 1] }}
+        gl={{ alpha: true, antialias: true }}
+      >
+        <CursorMesh />
+      </Canvas>
+    </div>
   )
 }

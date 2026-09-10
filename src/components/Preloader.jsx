@@ -1,37 +1,65 @@
 import { useEffect, useState } from "react"
 
-// Active Theory-style preloader: 0-100 counter + bar, fades out.
-export default function Preloader({ onDone }) {
-  const [n, setN] = useState(0)
+const STAGES = [
+  { text: "INITIALIZING CORE...", duration: 600 },
+  { text: "LOADING ENVIRONMENT...", duration: 800 },
+  { text: "CALIBRATING SENSORS...", duration: 600 },
+  { text: "ENTERING NEXPLACE...", duration: 700 },
+]
+
+export default function Preloader({ onDone, reducedMotion = false }) {
+  const [stageIdx, setStageIdx] = useState(0)
+  const [progress, setProgress] = useState(0)
   const [leaving, setLeaving] = useState(false)
 
   useEffect(() => {
-    let raf = 0
-    const t0 = performance.now()
-    const DUR = 1400
-    const tick = (t) => {
-      const p = Math.min(1, (t - t0) / DUR)
-      // ease-out so it feels fast then settles on 100
-      const eased = 1 - Math.pow(1 - p, 3)
-      setN(Math.round(eased * 100))
-      if (p < 1) raf = requestAnimationFrame(tick)
-      else {
-        setLeaving(true)
-        setTimeout(onDone, 450)
-      }
+    if (reducedMotion) {
+      onDone()
+      return undefined
     }
-    raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
-  }, [onDone])
+    let raf = 0
+    let doneTimer = 0
+    const startStage = (idx) => {
+      if (idx >= STAGES.length) {
+        setLeaving(true)
+        doneTimer = window.setTimeout(onDone, 600)
+        return
+      }
+
+      const stage = STAGES[idx]
+      const t0 = performance.now()
+
+      const tick = (t) => {
+        const p = Math.min(1, (t - t0) / stage.duration)
+        setProgress(Math.round(p * 100))
+
+        if (p < 1) {
+          raf = requestAnimationFrame(tick)
+        } else {
+          setStageIdx(idx + 1)
+          startStage(idx + 1)
+        }
+      }
+      raf = requestAnimationFrame(tick)
+    }
+
+    startStage(0)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.clearTimeout(doneTimer)
+    }
+  }, [onDone, reducedMotion])
 
   return (
     <div className={`preloader${leaving ? " is-leaving" : ""}`} aria-hidden={leaving}>
       <div className="preloader-inner">
         <div className="preloader-word">NEXPLACE</div>
-        <div className="preloader-sub">ROBOTICS & AI · CREATOR HQ</div>
-        <div className="preloader-count">{n}</div>
+        <div className="preloader-sub" style={{ minHeight: '1.2em', transition: 'opacity 0.3s' }}>
+          {stageIdx < STAGES.length ? STAGES[stageIdx].text : "SYSTEM READY"}
+        </div>
+        <div className="preloader-count">{progress}</div>
         <div className="preloader-bar">
-          <div className="preloader-fill" style={{ width: `${n}%` }} />
+          <div className="preloader-fill" style={{ width: `${progress}%` }} />
         </div>
       </div>
     </div>

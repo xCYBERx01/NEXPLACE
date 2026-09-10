@@ -1,8 +1,8 @@
-import { aboutStats, contact } from "../os/data"
+import { aboutStats, contact, projects } from "../os/data"
 
 export function Nav({ onEnter }) {
   return (
-    <header className="nav-pill" role="banner">
+    <header className="nav-pill nav-shell" role="banner">
       <a href="#top" className="nav-logo" data-hover>
         NEXPLACE<span className="accent">.</span>
       </a>
@@ -11,44 +11,51 @@ export function Nav({ onEnter }) {
         <a href="#about" data-hover>About</a>
         <a href="#contact" data-hover>Contact</a>
       </nav>
-      <button className="btn btn-primary btn-sm" onClick={onEnter} data-hover>
-        Enter the Lab →
+      <button className="nav-access" onClick={onEnter} data-hover>
+        <span className="nav-access-dot" aria-hidden /> Enter lab
       </button>
     </header>
   )
 }
 
 export function Hero({ onEnter }) {
-  const scrollToWork = () => {
-    document.querySelector("#work")?.scrollIntoView({ behavior: "smooth" })
-  }
   return (
-    <section id="top" className="hero">
-      <div className="hero-inner">
-        <p className="mono-label hero-kicker">AHMED IRFAN AKRAMI · ROBOTICS & AI ENGINEER</p>
-        <h1 className="hero-title">
-          NEX
-          <br />
-          PLACE
-        </h1>
-        <p className="hero-sub">
-          Creator HQ — an interactive 3D portfolio. Thirteen shipped systems in
-          robotics, embedded, automation and AI. Scroll the work index, open a
-          case file, or step inside the lab and walk it in first person.
-        </p>
-        <div className="hero-ctas">
-          <button className="btn btn-primary" onClick={scrollToWork} data-hover>
-            View Work ↓
-          </button>
-          <button className="btn btn-ghost" onClick={onEnter} data-hover>
-            Enter the Lab →
-          </button>
+    <section id="top" className="hero hero-blank" aria-label="Intro">
+      <div className="hero-blank-grid" aria-hidden="true" />
+      <div className="hero-blank-rail" aria-hidden="true" />
+
+      <div className="hero-inner hero-grid">
+        <div className="hero-copy">
+          <p className="mono-label hero-kicker">AHMED IRFAN AKRAMI / 2026</p>
+          <h1 className="hero-title">
+            NEX<span>/</span>
+            <br />
+            PLACE
+          </h1>
+          <p className="hero-sub">
+            A living archive of machines, interfaces, and systems built across the
+            edge between physical labor and digital intelligence.
+          </p>
+          <div className="hero-meta">
+            <span>BUILDING AT THE EDGE</span>
+            <button className="hero-lab-link" onClick={onEnter} data-hover>Enter the lab ↗</button>
+          </div>
         </div>
-        <div className="hero-meta">
-          <span>NRL 007 VOLTEDGE</span>
-          <span>CROC OS · ESP32</span>
-          <span>13 SHIPPED SYSTEMS</span>
+
+        <div className="hero-rail" aria-label="Selected work">
+          <div className="hero-rail-label">Selected work / 13</div>
+          {projects.slice(0, 6).map((project, index) => (
+            <a key={project.id} href="#work" className="hero-rail-item" data-hover>
+              <span className="hero-rail-index">{String(index + 1).padStart(2, "0")}</span>
+              <span>{project.name}</span>
+            </a>
+          ))}
         </div>
+      </div>
+
+      <div className="hero-scroll-mark" aria-hidden="true">
+        <span>SCROLL</span>
+        <i />
       </div>
       <div className="hero-fade" aria-hidden />
     </section>

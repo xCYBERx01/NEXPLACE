@@ -19,7 +19,7 @@ An immersive, game-like portfolio for **Ahmed Irfan Akrami**, a Robotics & AI en
   - NPC robot + ceiling lighting
 - **Camera flow** — scroll to scrub the exterior camera from a wide hero shot down to the entrance → `Enter` → blinding white flash → interior (first-person).
 - **First-person navigation** — WASD move, pointer-lock mouse look, `Space` jump, `Shift` run, `E` open resume near the desk.
-- **Scroll** — Lenis smooth scroll + GSAP ScrollTrigger scrub a fixed full-viewport canvas over a 400vh track.
+- **Scroll** — Lenis smooth scroll + anime.js driving a fixed full-viewport canvas camera over the scrollable content.
 - **Mobile fallback** — virtual joystick + "skip to portfolio" link.
 - **SEO/technical** — semantic `index.html`, Open Graph, Twitter Cards, JSON-LD structured data, `robots.txt`, `sitemap.xml`, `llms.txt`, PWA `manifest.json`, favicons, custom `404.html`.
 
@@ -34,7 +34,7 @@ An immersive, game-like portfolio for **Ahmed Irfan Akrami**, a Robotics & AI en
 | 3D | three 0.185, @react-three/fiber 9, @react-three/drei 10 |
 | Physics | @react-three/rapier 2 |
 | Character controller | ecctrl |
-| Scroll | GSAP + ScrollTrigger, Lenis |
+| Scroll | Lenis + anime.js |
 | Lint | oxlint |
 
 > **Note on Vite 8:** Vite 8 (Rolldown) previously emitted `Could not load index.html — stream did not contain valid UTF-8` on Windows. The project pins Vite **7** (esbuild-based production build) to avoid this regression. Upgrade once the upstream bug is resolved.
@@ -86,12 +86,12 @@ Node.js 18+ is recommended.
 ├── src/
 │   ├── main.jsx          # React entry
 │   ├── App.jsx           # exterior Creator HQ + phase/camera transitions
-│   ├── Workshop.jsx      # interior workshop (physics, furniture, projects)
+│   ├── Interior.jsx      # interior workshop (physics, furniture, projects)
 │   ├── Joystick.jsx      # lazy-loaded mobile joystick
 │   ├── index.css         # global styles
 │   ├── config.js         # site metadata
 │   └── os/data.js        # portfolio data (projects, resume, awards)
-│       └── (reserved project content)
+│       └── OSInterface.jsx # project browser rendered on the workstation
 └── docs/                 # UX/design research notes
 ```
 

@@ -5,8 +5,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0a0f14",
-  "theme_color": "#2f9e92",
+  "background_color": "#080909",
+  "theme_color": "#c7f36b",
   "orientation": "any",
   "categories": ["portfolio", "engineering"],
   "icons": [
@@ -16,8 +16,8 @@
     { "src": "./apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any maskable" }
   ],
   "shortcuts": [
-    { "name": "Projects", "url": "/#projects", "description": "Browse projects" },
-    { "name": "Resume", "url": "/#resume", "description": "View resume" },
+    { "name": "Projects", "url": "/#work", "description": "Browse projects" },
+    { "name": "Lab", "url": "/#top", "description": "Enter the interactive lab" },
     { "name": "Contact", "url": "/#contact", "description": "Get in touch" }
   ]
 }

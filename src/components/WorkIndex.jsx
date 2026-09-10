@@ -28,8 +28,7 @@ function useReveal(dep) {
 
 export default function WorkIndex({ projects, onOpen }) {
   const [filter, setFilter] = useState("All")
-  const [preview, setPreview] = useState(null)
-  const prevRef = useRef(null)
+  const [selectedId, setSelectedId] = useState(projects[0]?.id)
   const listRef = useReveal(filter)
 
   const items = useMemo(
@@ -37,32 +36,8 @@ export default function WorkIndex({ projects, onOpen }) {
     [projects, filter]
   )
 
-  // Floating preview follows the cursor over the list (desktop only).
-  useEffect(() => {
-    const el = prevRef.current
-    if (!el) return
-    let raf = 0
-    let tx = 0
-    let ty = 0
-    let x = 0
-    let y = 0
-    const onMove = (e) => {
-      tx = e.clientX
-      ty = e.clientY
-    }
-    const loop = () => {
-      x += (tx - x) * 0.12
-      y += (ty - y) * 0.12
-      el.style.transform = `translate(${x + 24}px, ${y - 110}px)`
-      raf = requestAnimationFrame(loop)
-    }
-    window.addEventListener("mousemove", onMove, { passive: true })
-    raf = requestAnimationFrame(loop)
-    return () => {
-      window.removeEventListener("mousemove", onMove)
-      cancelAnimationFrame(raf)
-    }
-  }, [])
+  const selected = projects.find((project) => project.id === selectedId) || projects[0]
+  const selectedIndex = projects.findIndex((project) => project.id === selected?.id)
 
   return (
     <section id="work" className="work-section">
@@ -71,10 +46,7 @@ export default function WorkIndex({ projects, onOpen }) {
         <h2 className="section-title">
           Work<span className="accent">({String(projects.length).padStart(2, "0")})</span>
         </h2>
-        <p className="section-sub">
-          Shipped systems across robotics, embedded, software, AI and automation.
-          Hover to preview — click to open the case file.
-        </p>
+        <p className="section-sub">An evolving field lab for machines, interfaces and ideas.</p>
       </div>
 
       <div className="filters" role="tablist" aria-label="Filter projects">
@@ -91,15 +63,29 @@ export default function WorkIndex({ projects, onOpen }) {
         ))}
       </div>
 
-      <div ref={listRef} className="work-list">
+      <div className="field-stage">
+        <div className="field-stage-art">
+          <ProjectArt project={selected} index={selectedIndex} />
+          <div className="field-stage-grid" aria-hidden="true" />
+          <div className="field-stage-status"><span /> LIVE SPECIMEN / {String(selectedIndex + 1).padStart(2, "0")}</div>
+        </div>
+        <div className="field-stage-copy">
+          <span className="mono-label">CURRENT EXPERIMENT</span>
+          <h3>{selected.name}</h3>
+          <p>{selected.summary}</p>
+          <button className="btn btn-primary btn-sm" onClick={() => onOpen(selected)}>Open case file ↗</button>
+        </div>
+      </div>
+
+      <div ref={listRef} className="work-list field-catalog">
+        <div className="field-catalog-head"><span>Catalog</span><span>{String(items.length).padStart(2, "0")} specimens</span></div>
         {items.map((p, i) => (
           <article
             key={p.id}
-            className="work-row"
+            className={`work-row${p.id === selected.id ? " is-selected" : ""}`}
             data-hover
-            onMouseEnter={() => setPreview({ project: p, index: i })}
-            onMouseLeave={() => setPreview(null)}
-            onClick={() => onOpen(p)}
+            onMouseEnter={() => setSelectedId(p.id)}
+            onClick={() => setSelectedId(p.id)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") onOpen(p)
             }}
@@ -116,18 +102,6 @@ export default function WorkIndex({ projects, onOpen }) {
             <span className="work-arrow" aria-hidden>↗</span>
           </article>
         ))}
-      </div>
-
-      <div
-        ref={prevRef}
-        className={`work-preview${preview ? " is-visible" : ""}`}
-        aria-hidden
-      >
-        {preview && (
-          <div className="work-preview-card">
-            <ProjectArt project={preview.project} index={preview.index} compact />
-          </div>
-        )}
       </div>
     </section>
   )

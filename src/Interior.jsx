@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo, Suspense } from "react"
+import { useState, useEffect, useMemo, useRef, Suspense } from "react"
 import * as THREE from "three"
-import { useThree } from "@react-three/fiber"
+import { useThree, useFrame } from "@react-three/fiber"
 import { Html, KeyboardControls, RoundedBox, useGLTF } from "@react-three/drei"
 import { RigidBody } from "@react-three/rapier"
 import Ecctrl from "ecctrl"
+import OSInterface from "./os/OSInterface"
+import { projects } from "./os/data"
 
 const ACCENT = "#2f9e92"
 
@@ -101,7 +103,53 @@ function PaperworkDesk({ position, onOpen }) {
   )
 }
 
-function MakerBench({ position, rotY }) {
+function DragController({ toolsRef }) {
+  const { camera, pointer, raycaster } = useThree()
+
+  useFrame(() => {
+    raycaster.setFromCamera(pointer, camera)
+    const intersects = raycaster.intersectObjects(toolsRef.current, true)
+
+    if (intersects.length > 0) {
+      const tool = intersects[0].object
+            const body = tool.userData.rigidBody
+      if (body) {
+        const targetPos = new THREE.Vector3()
+        raycaster.ray.at(1, targetPos) // rough approximation
+        const force = new THREE.Vector3().subVectors(targetPos, tool.position).multiplyScalar(10)
+        body.applyImpulse(force, true)
+      }
+    }
+  })
+
+  return null
+}
+
+function Tool({ position, color, toolsRef }) {
+  const bodyRef = useRef()
+  const meshRef = useRef()
+
+  useEffect(() => {
+      const mesh = meshRef.current
+      if (!mesh || !bodyRef.current) return undefined
+      mesh.userData.rigidBody = bodyRef.current
+      toolsRef.current.push(mesh)
+      return () => {
+        toolsRef.current = toolsRef.current.filter((item) => item !== mesh)
+      }
+    }, [toolsRef])
+
+  return (
+    <RigidBody ref={bodyRef} colliders="cuboid" position={position} linearDamping={0.5} angularDamping={0.5}>
+      <mesh ref={meshRef} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.03, 0.03, 0.5, 8]} />
+        <meshStandardMaterial color={color} roughness={0.4} />
+      </mesh>
+    </RigidBody>
+  )
+}
+
+function MakerBench({ position, rotY, toolsRef }) {
   const pegX = [-1, -0.5, 0, 0.5, 1]
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -126,12 +174,14 @@ function MakerBench({ position, rotY }) {
           </mesh>
         ))}
         {[-0.9, -0.3, 0.3, 0.9].map((x, i) => (
-          <mesh key={i} position={[x, 0.24, 0.2]} rotation={[0, i * 0.4, Math.PI / 2]} castShadow>
-            <cylinderGeometry args={[0.03, 0.03, 0.5, 8]} />
-            <meshStandardMaterial color={i % 2 ? "#c0392b" : "#2f9e92"} roughness={0.4} />
-          </mesh>
+          <Tool
+            key={i}
+            position={[x, 0.24, 0.2]}
+            color={i % 2 ? "#c0392b" : "#2f9e92"}
+            toolsRef={toolsRef}
+          />
         ))}
-        <DeskLabel text="MAKER BENCH · PEGBOARD" />
+        <DeskLabel text="MAKER BENCH · INTERACTIVE TOOLS" />
       </group>
     </RigidBody>
   )
@@ -237,9 +287,37 @@ function Robot({ position }) {
   )
 }
 
+function Workstation({ position }) {
+  return (
+    <group position={position}>
+      <Suspense fallback={<DeskFallback />}>
+        <NormalizedModel url="/assets/desk.glb" />
+      </Suspense>
+      <Html
+        position={[0, 1.5, 0]}
+        center
+        distanceFactor={5}
+        transform
+        sprite
+        style={{
+          width: '400px',
+          height: '200px',
+          pointerEvents: 'auto'
+        }}
+      >
+        <div style={{ transform: 'scale(1)', width: '100%', height: '100%' }}>
+          <OSInterface projects={projects} />
+        </div>
+      </Html>
+      <DeskLabel text="WORKSTATION · OS PORTAL" y={1.7} />
+    </group>
+  )
+}
+
 export default function Interior({ fps }) {
   const [showResume, setShowResume] = useState(false)
   const { camera } = useThree()
+    const toolsRef = useRef([])
 
   // Room is x ~ [-5.2, 5.2], z ~ [-5.2, 5.2], door at +z center (x=0).
   // Layout: back wall = desks, left = maker bench, right = shelf,
@@ -279,15 +357,13 @@ export default function Interior({ fps }) {
         </group>
       ))}
       <pointLight position={[0, 2.2, 3]} intensity={12} distance={9} decay={2} color="#7ccfc7" />
+      <DragController toolsRef={toolsRef} />
 
       <group position={[-3.4, 0, -4]}>
-        <Suspense fallback={<DeskFallback />}>
-          <NormalizedModel url="/assets/desk.glb" />
-        </Suspense>
-        <DeskLabel text="WORKSTATION · DESK + CHAIR + SCREEN" y={1.7} />
+        <Workstation position={[0, 0, 0]} />
       </group>
       <PaperworkDesk position={[4, 0.9, -4]} onOpen={() => setShowResume(true)} />
-      <MakerBench position={[-4.2, 0.9, 1.2]} rotY={Math.PI / 2} />
+      <MakerBench position={[-4.2, 0.9, 1.2]} rotY={Math.PI / 2} toolsRef={toolsRef} />
       <ProjectShelf position={[4, 0, 1]} rotY={-Math.PI / 2} />
       <DroneTable position={[0, 0.9, -0.6]} />
       <CrocTank position={[0.4, 0, 1.2]} />
