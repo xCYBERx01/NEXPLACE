@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+/* Fonts load via a single preconnected <link> in index.html. */
 
 /* DESIGN TOKENS (locked): editorial studio theme. DOM chrome uses --accent
    (lime). Teal is reserved for in-world 3D lab glow (--lab) — see
@@ -73,31 +73,24 @@ body {
 .preloader.is-leaving { opacity: 0; visibility: hidden; }
 .preloader-inner { text-align: center; width: min(420px, 80vw); }
 .preloader-word { font-weight: 900; letter-spacing: 0.28em; font-size: 15px; }
-.preloader-sub { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--muted); margin-top: 8px; }
+.preloader-sub { font-family: "DM Mono", monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--muted); margin-top: 8px; }
 .preloader-count { font-weight: 900; font-size: clamp(72px, 14vw, 128px); letter-spacing: -0.05em; line-height: 1; margin: 12px 0; }
 .preloader-bar { height: 2px; background: rgba(255,255,255,0.12); border-radius: 999px; overflow: hidden; }
 .preloader-fill { height: 100%; background: var(--accent); transition: width 0.1s linear; }
 
-/* ---------- Custom cursor ---------- */
-.cursor-dot, .cursor-ring {
-  position: fixed;
-  top: 0; left: 0;
-  pointer-events: none;
-  z-index: 90;
-  opacity: 0;
-  border-radius: 50%;
-}
+/* ---------- Custom cursor (progressive enhancement) ---------- */
 .cursor-layer, .cursor-layer > div, .cursor-layer canvas { pointer-events: none !important; }
-.cursor-dot { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--accent-soft); }
-.cursor-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 1px solid rgba(255,255,255,0.5); transition: border-color 0.2s; }
-@media (pointer: coarse) { .cursor-dot, .cursor-ring { display: none; } }
-@media (pointer: fine) {
-  body, a, button, .work-row { cursor: none; }
-}
+/* cursor:none applies ONLY while the WebGL cursor layer is actually running
+   (html.has-custom-cursor, set by Cursor.jsx on context creation), so touch,
+   keyboard, reduced-motion, and WebGL-failure visitors keep the native pointer. */
+html.has-custom-cursor body,
+html.has-custom-cursor a,
+html.has-custom-cursor button,
+html.has-custom-cursor .work-row { cursor: none; }
 
 /* ---------- Type + buttons ---------- */
 .mono-label {
-  font-family: "JetBrains Mono", monospace;
+  font-family: "DM Mono", monospace;
   font-size: 11px;
   letter-spacing: 0.22em;
   color: var(--muted);
@@ -171,7 +164,7 @@ body {
   gap: 18px;
   flex-wrap: wrap;
   margin-top: 30px;
-  font-family: "JetBrains Mono", monospace;
+  font-family: "DM Mono", monospace;
   font-size: 10px;
   letter-spacing: 0.2em;
   color: var(--accent-soft);
@@ -400,7 +393,7 @@ body {
 .work-row:last-child { border-bottom: 1px solid var(--line); }
 .work-row.is-in { opacity: 1; transform: none; }
 .work-row:hover, .work-row:focus-visible { background: rgba(47, 158, 146, 0.07); }
-.work-index { font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--muted); }
+.work-index { font-family: "DM Mono", monospace; font-size: 12px; color: var(--muted); }
 .work-name {
   margin: 0;
   font-size: clamp(26px, 4.5vw, 54px);
@@ -412,7 +405,7 @@ body {
 .work-row:hover .work-name { transform: translateX(10px); }
 .work-summary { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; max-width: 640px; }
 .work-group {
-  font-family: "JetBrains Mono", monospace;
+  font-family: "DM Mono", monospace;
   font-size: 10px;
   letter-spacing: 0.18em;
   color: var(--accent-soft);
@@ -511,7 +504,7 @@ body {
   padding-top: 20px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-family: "JetBrains Mono", monospace;
+  font-family: "DM Mono", monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
 }
@@ -522,7 +515,7 @@ body {
   top: 14px; left: 50%;
   transform: translateX(-50%);
   z-index: 40;
-  font-family: "JetBrains Mono", monospace;
+  font-family: "DM Mono", monospace;
   font-size: 10px;
   letter-spacing: 0.18em;
   color: var(--accent-soft);
@@ -533,7 +526,7 @@ body {
   backdrop-filter: blur(10px);
   white-space: nowrap;
 }
-.lab-exit { position: fixed; bottom: 20px; left: 20px; z-index: 10001; pointer-events: auto; }
+.lab-exit { position: fixed; bottom: 20px; right: 20px; z-index: 10001; pointer-events: auto; }
 
 /* ---------- Scrollbars ---------- */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -599,7 +592,7 @@ html.lenis, html.lenis body { height: auto; }
 .hero-lab-link { border: 0; padding: 0; color: var(--accent); background: transparent; font: inherit; text-transform: uppercase; }
 .hero-project-rail { position: absolute; z-index: 4; top: 50%; right: 28px; width: min(300px, 24vw); transform: translateY(-50%); }
 .hero-project-label { display: block; margin-bottom: 14px; color: var(--muted); font: 10px "DM Mono", monospace; letter-spacing: 0.14em; text-transform: uppercase; }
-.hero-project-link { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(241,244,235,0.14); color: var(--text); text-decoration: none; font: 13px "Space Grotesk", sans-serif; transition: color 0.2s ease, padding 0.2s ease; }
+.hero-project-link { display: flex; align-items: baseline; gap: 12px; width: 100%; padding: 8px 0; border: 0; border-bottom: 1px solid rgba(241,244,235,0.14); background: transparent; color: var(--text); text-align: left; font: 13px "Space Grotesk", sans-serif; cursor: pointer; transition: color 0.2s ease, padding 0.2s ease; }
 .hero-project-link small { width: 20px; color: var(--muted); font: 9px "DM Mono", monospace; }
 .hero-project-link:hover { padding-left: 8px; color: var(--accent); }
 .hero-art-wrap { position: absolute; z-index: 1; width: min(43vw, 540px); aspect-ratio: 1.25; right: 8vw; top: 22%; transform: rotate(4deg); }
@@ -638,4 +631,21 @@ html.lenis, html.lenis body { height: auto; }
   .hero-art-wrap { width: 48vw; right: 8vw; top: 10%; opacity: 0.45; }
   .hero-project-rail { left: 24px; right: 24px; bottom: 24px; width: auto; }
   .hero-project-link:nth-of-type(n + 5) { display: none; }
+}
+
+/* ---------- Accessibility: focus + reduced motion ---------- */
+/* Visible keyboard focus everywhere (comes last so it beats outline:none). */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* Honor prefers-reduced-motion across the whole UI: Lenis already switches
+   to 1:1 scrolling via respectReducedMotion; this kills CSS transitions,
+   the detail-panel entrance, and work-row reveals (content stays visible —
+   .work-row.is-in gating is IntersectionObserver-driven, opacity ends at 1). */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

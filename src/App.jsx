@@ -2,9 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import React from "react"
 import * as THREE from "three"
 import { Canvas } from "@react-three/fiber"
-import { Environment, ContactShadows, SoftShadows } from "@react-three/drei"
+import { Environment, Lightformer, ContactShadows } from "@react-three/drei"
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing"
-import { Physics } from "@react-three/rapier"
 import { animate } from "animejs"
 import { projects } from "./os/data"
 import Preloader from "./components/Preloader"
@@ -15,10 +14,11 @@ import InteractionPrompt from "./components/InteractionPrompt"
 import { Nav, Hero, About, Contact } from "./components/Sections"
 import BuildingShell from "./scene/BuildingShell"
 import Grounds from "./scene/Grounds"
+import WorkshopVisual from "./scene/WorkshopVisual"
 import CinematicCamera, { STATIONS } from "./scene/CinematicCamera"
 import useSmoothScroll from "./hooks/useSmoothScroll"
 
-const Interior = React.lazy(() => import("./Interior"))
+const FpsWorld = React.lazy(() => import("./scene/FpsWorld"))
 const Joystick = React.lazy(() => import("./Joystick"))
 
 export default function App() {
@@ -121,31 +121,41 @@ export default function App() {
       <Cursor />
 
       <main>
-        <h1 style={{ position: "absolute", width: "1px", height: "1px", padding: "0", margin: "-1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", borderWidth: "0" }}>
+        <p style={{ position: "absolute", width: "1px", height: "1px", padding: "0", margin: "-1px", overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", borderWidth: "0" }}>
           Ahmed Irfan Akrami · Robotics & AI Engineer Portfolio
-        </h1>
+        </p>
 
         <div className={`app-viewport${fps ? " is-fps" : ""}`}>
           {flash > 0 && <div style={{ position: "absolute", inset: 0, zIndex: 50, background: "#fff", opacity: flash, pointerEvents: "none", transition: "opacity 0.3s ease" }} />}
-          <Canvas shadows dpr={[1, 1.75]} camera={{ position: [0, 4.4, 14.5], fov: 50 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}>
+          <Canvas shadows dpr={[1, 1.5]} camera={{ position: [0, 4.4, 14.5], fov: 50 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}>
             <color attach="background" args={["#080909"]} />
-            <SoftShadows size={20} samples={16} focus={0} />
             <ambientLight intensity={0.55} />
             <hemisphereLight args={["#dfe8f0", "#38424e", 0.5]} />
-            <directionalLight position={[12, 16, 10]} intensity={2.2} castShadow shadow-mapSize={[2048, 2048]} shadow-bias={-0.0002} />
+            <directionalLight position={[12, 16, 10]} intensity={2.2} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.0002} />
             <directionalLight position={[-6, 8, -4]} intensity={0.7} color="#aec6dd" />
-            <Environment preset="city" />
+            {/* Local studio env rig (Lightformer): zero network fetch. The old
+                preset="city" pulled a remote HDR on first paint, blocking LCP. */}
+            <Environment resolution={256}>
+              <group rotation={[-Math.PI / 3, 0, 0]}>
+                <Lightformer form="circle" intensity={4} position={[0, 5, -9]} scale={2} />
+                <Lightformer intensity={1.2} position={[-5, 1, -1]} scale={[20, 0.5]} />
+                <Lightformer intensity={1.2} position={[5, 1, -1]} scale={[20, 0.5]} />
+                <Lightformer color="#7ccfc7" intensity={1} position={[0, 2, 5]} scale={[6, 1]} />
+              </group>
+            </Environment>
             <Grounds />
-            <Physics gravity={[0, -9.81, 0]}>
-              <BuildingShell />
+            <BuildingShell />
+            {!fps ? (
+              <WorkshopVisual workstationActive={currentStation?.id === "workstation" || interactionState === "workstation"} />
+            ) : (
               <React.Suspense fallback={null}>
-                <Interior fps={fps} />
+                <FpsWorld fps={fps} />
               </React.Suspense>
-            </Physics>
+            )}
             <ContactShadows position={[0, -0.02, 0]} opacity={0.35} scale={30} blur={2.2} far={4} />
             <CinematicCamera scrollT={scrollT} fpsActive={fps} />
             {!isMobile && (
-              <EffectComposer multisampling={4}>
+              <EffectComposer multisampling={0}>
                 <Bloom intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.2} mipmapBlur />
                 <Vignette eskil={false} offset={0.18} darkness={0.72} />
               </EffectComposer>
@@ -163,7 +173,7 @@ export default function App() {
                 position: 'fixed', bottom: '10vh', right: '5vw', zIndex: 100,
                 background: '#e8e8e8', color: '#0b0b0b', border: 'none',
                 padding: '12px 24px', fontWeight: 700, cursor: 'pointer',
-                fontFamily: '"JetBrains Mono", monospace', textTransform: 'uppercase'
+                fontFamily: '"DM Mono", monospace', textTransform: 'uppercase'
               }}
             >
               Resume Scroll (ESC)
@@ -174,7 +184,7 @@ export default function App() {
         {!fps && !loading && (
           <div className="site-content">
             <Nav onEnter={enter} />
-            <Hero onEnter={enter} />
+            <Hero onEnter={enter} onOpen={openProject} />
             <div className="content-solid">
               <WorkIndex projects={projects} onOpen={openProject} />
               <About />

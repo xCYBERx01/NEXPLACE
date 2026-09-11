@@ -49,12 +49,11 @@ export default function WorkIndex({ projects, onOpen }) {
         <p className="section-sub">An evolving field lab for machines, interfaces and ideas.</p>
       </div>
 
-      <div className="filters" role="tablist" aria-label="Filter projects">
+      <div className="filters" role="group" aria-label="Filter projects">
         {FILTERS.map((f) => (
           <button
             key={f}
-            role="tab"
-            aria-selected={filter === f}
+            aria-pressed={filter === f}
             className={`chip${filter === f ? " is-active" : ""}`}
             onClick={() => setFilter(f)}
           >
@@ -67,7 +66,7 @@ export default function WorkIndex({ projects, onOpen }) {
         <div className="field-stage-art">
           <ProjectArt project={selected} index={selectedIndex} />
           <div className="field-stage-grid" aria-hidden="true" />
-          <div className="field-stage-status"><span /> LIVE SPECIMEN / {String(selectedIndex + 1).padStart(2, "0")}</div>
+          <div className="field-stage-status" role="status"><span /> LIVE SPECIMEN / {String(selectedIndex + 1).padStart(2, "0")}</div>
         </div>
         <div className="field-stage-copy">
           <span className="mono-label">CURRENT EXPERIMENT</span>
@@ -87,11 +86,15 @@ export default function WorkIndex({ projects, onOpen }) {
             onMouseEnter={() => setSelectedId(p.id)}
             onClick={() => setSelectedId(p.id)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onOpen(p)
+              if (e.key === "Enter" || e.key === " ") {
+                // Space would otherwise scroll the page behind the catalog.
+                e.preventDefault()
+                onOpen(p)
+              }
             }}
             tabIndex={0}
             role="button"
-            aria-label={`Open ${p.name}`}
+            aria-label={`${p.name} — press Enter to open case file`}
           >
             <span className="work-index">{String(i + 1).padStart(2, "0")}</span>
             <div className="work-main">

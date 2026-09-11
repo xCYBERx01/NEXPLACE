@@ -2,7 +2,7 @@ import { aboutStats, contact, projects } from "../os/data"
 
 export function Nav({ onEnter }) {
   return (
-    <header className="nav-pill nav-shell" role="banner">
+    <header className="nav-pill nav-shell">
       <a href="#top" className="nav-logo" data-hover>
         NEXPLACE<span className="accent">.</span>
       </a>
@@ -18,7 +18,7 @@ export function Nav({ onEnter }) {
   )
 }
 
-export function Hero({ onEnter }) {
+export function Hero({ onEnter, onOpen }) {
   return (
     <section id="top" className="hero hero-blank" aria-label="Intro">
       <div className="hero-blank-grid" aria-hidden="true" />
@@ -27,10 +27,10 @@ export function Hero({ onEnter }) {
       <div className="hero-inner hero-grid">
         <div className="hero-copy">
           <p className="mono-label hero-kicker">AHMED IRFAN AKRAMI / 2026</p>
-          <h1 className="hero-title">
-            NEX<span>/</span>
-            <br />
-            PLACE
+          <h1 className="hero-title" aria-label="NEXPLACE">
+            <span aria-hidden="true">NEX/</span>
+            <br aria-hidden="true" />
+            <span aria-hidden="true">PLACE</span>
           </h1>
           <p className="hero-sub">
             A living archive of machines, interfaces, and systems built across the
@@ -45,10 +45,17 @@ export function Hero({ onEnter }) {
         <div className="hero-rail" aria-label="Selected work">
           <div className="hero-rail-label">Selected work / 13</div>
           {projects.slice(0, 6).map((project, index) => (
-            <a key={project.id} href="#work" className="hero-rail-item" data-hover>
+            <button
+              key={project.id}
+              type="button"
+              className="hero-project-link"
+              data-hover
+              onClick={() => onOpen?.(project)}
+              aria-label={`Open ${project.name} case file`}
+            >
               <span className="hero-rail-index">{String(index + 1).padStart(2, "0")}</span>
               <span>{project.name}</span>
-            </a>
+            </button>
           ))}
         </div>
       </div>

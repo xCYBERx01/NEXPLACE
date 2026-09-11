@@ -1,19 +1,47 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import ProjectArt from "./ProjectArt"
 
 // Full-screen case-file overlay, Active Theory project-page style.
+// Accessible dialog: initial focus on close, Tab trap inside the panel,
+// focus returned to the invoker, background marked inert, and the scrollable
+// panel flagged data-lenis-prevent so Lenis can't scroll-chain behind it.
 export default function ProjectDetail({ project, index, total, onClose, onPrev, onNext }) {
+  const panelRef = useRef(null)
+  const prevFocus = useRef(null)
+
   useEffect(() => {
+    prevFocus.current = document.activeElement
+    const panel = panelRef.current
+    panel?.querySelector(".detail-close")?.focus()
+
     const onKey = (e) => {
-      if (e.key === "Escape") onClose()
-      if (e.key === "ArrowLeft") onPrev()
-      if (e.key === "ArrowRight") onNext()
+      if (e.key === "Escape") { onClose(); return }
+      if (e.key === "ArrowLeft") { onPrev(); return }
+      if (e.key === "ArrowRight") { onNext(); return }
+      if (e.key !== "Tab" || !panel) return
+      const items = panel.querySelectorAll('a[href], button:not([disabled])')
+      if (items.length === 0) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener("keydown", onKey)
     document.body.style.overflow = "hidden"
+    const bg = document.querySelectorAll(".site-content, .app-viewport")
+    bg.forEach((el) => el.setAttribute("inert", ""))
     return () => {
       window.removeEventListener("keydown", onKey)
       document.body.style.overflow = ""
+      bg.forEach((el) => el.removeAttribute("inert"))
+      if (prevFocus.current && typeof prevFocus.current.focus === "function") {
+        prevFocus.current.focus()
+      }
     }
   }, [onClose, onPrev, onNext])
 
@@ -22,7 +50,7 @@ export default function ProjectDetail({ project, index, total, onClose, onPrev, 
   return (
     <div className="detail-overlay" role="dialog" aria-modal="true" aria-label={project.name}>
       <div className="detail-backdrop" onClick={onClose} />
-      <div className="detail-panel">
+      <div className="detail-panel" ref={panelRef} data-lenis-prevent>
         <div className="detail-art">
           <ProjectArt project={project} index={index} />
           <button className="detail-close" onClick={onClose} aria-label="Close project">

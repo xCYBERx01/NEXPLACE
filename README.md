@@ -1,133 +1,33 @@
 # NEXPLACE — Interactive 3D Portfolio
 
-An immersive, game-like portfolio for **Ahmed Irfan Akrami**, a Robotics & AI engineer. Explore a modern **Creator HQ** building from the outside, step through the front door (with a blinding white flash), and wander a full **3D warehouse workshop** containing desks, workbenches, project shelves, and a Croc OS tank — all navigated in first-person.
+Immersive 3D portfolio for **Ahmed Irfan Akrami**, Robotics & AI engineer. Scroll through a modern **Creator HQ** exterior, step inside, and explore a physics-based workshop in first-person.
 
-[Live site](https://nexplace.vercel.app/) · Built with [Three.js](https://threejs.org) + [React Three Fiber](https://docs.pmnd.rs/react-three-fiber).
+[Live site](https://nexplace.vercel.app/)
 
----
-
-## Features
-
-- **Exterior scene** — square modern Creator HQ with glass-curtain facade, mullions, entrance recess, double doors, security camera, roof HVAC/solar, sign, parking, and landscaping.
-- **Interior scene** — a physics-enabled 3D warehouse/workshop with:
-  - Gaming workstation (3 monitors, tower with RGB glow, keyboard/mouse)
-  - Paperwork desk with an interactive **resume** overlay
-  - Maker bench with pegboard + tools
-  - Drone table (quadcopter model)
-  - Project shelf with miniature project models
-  - **Croc OS** tank (chain wheels, OLED face, N20 motors)
-  - NPC robot + ceiling lighting
-- **Camera flow** — scroll to scrub the exterior camera from a wide hero shot down to the entrance → `Enter` → blinding white flash → interior (first-person).
-- **First-person navigation** — WASD move, pointer-lock mouse look, `Space` jump, `Shift` run, `E` open resume near the desk.
-- **Scroll** — Lenis smooth scroll + anime.js driving a fixed full-viewport canvas camera over the scrollable content.
-- **Mobile fallback** — virtual joystick + "skip to portfolio" link.
-- **SEO/technical** — semantic `index.html`, Open Graph, Twitter Cards, JSON-LD structured data, `robots.txt`, `sitemap.xml`, `llms.txt`, PWA `manifest.json`, favicons, custom `404.html`.
-
----
-
-## Tech Stack
-
-| Layer | Package |
-|-------|---------|
-| UI | React 19 |
-| Build | Vite 7 |
-| 3D | three 0.185, @react-three/fiber 9, @react-three/drei 10 |
-| Physics | @react-three/rapier 2 |
-| Character controller | ecctrl |
-| Scroll | Lenis + anime.js |
-| Lint | oxlint |
-
-> **Note on Vite 8:** Vite 8 (Rolldown) previously emitted `Could not load index.html — stream did not contain valid UTF-8` on Windows. The project pins Vite **7** (esbuild-based production build) to avoid this regression. Upgrade once the upstream bug is resolved.
-
----
-
-## Getting Started
+## Run
 
 ```bash
-# install
 npm install
-
-# dev server (http://localhost:5173)
-npm run dev
-
-# production build (→ dist/)
-npm run build
-
-# preview the production build (http://localhost:4173)
-npm run preview
-
-# lint
+npm run dev      # http://localhost:5173
+npm run build    # production → dist/
+npm run preview  # preview the build
 npm run lint
+npm run test:e2e # Playwright hallway test
 ```
-
-Node.js 18+ is recommended.
-
----
 
 ## Controls
 
 | Action | Desktop | Mobile |
 |--------|---------|--------|
-| Move | `W` `A` `S` `D` / arrows | virtual joystick |
+| Move | `W A S D` / arrows | joystick |
 | Look | mouse (pointer lock) | touch drag |
-| Jump | `Space` | joystick button |
-| Run | `Shift` | — |
-| Interact (resume) | `E` / click button | tap button |
-| Exit to exterior | `Esc` / "Outside" button | "Outside" button |
+| Jump / Run | `Space` / `Shift` | — |
+| Resume overlay | `E` | tap button |
+| Exit lab | `Esc` | Outside button |
 
----
+## Stack
 
-## Project Structure
-
-```
-├── index.html            # Vite entry + SEO/meta (root)
-├── vite.config.js        # build config, chunk splitting, three alias
-├── public/               # static assets (favicons, robots, manifest, sw, og-image)
-├── src/
-│   ├── main.jsx          # React entry
-│   ├── App.jsx           # exterior Creator HQ + phase/camera transitions
-│   ├── Interior.jsx      # interior workshop (physics, furniture, projects)
-│   ├── Joystick.jsx      # lazy-loaded mobile joystick
-│   ├── index.css         # global styles
-│   ├── config.js         # site metadata
-│   └── os/data.js        # portfolio data (projects, resume, awards)
-│       └── OSInterface.jsx # project browser rendered on the workstation
-└── docs/                 # UX/design research notes
-```
-
-### Code splitting
-
-The heaviest libraries are lazy-loaded so the landing (exterior) stays light:
-
-- `three` (~220 KB gzip) — loaded on the exterior.
-- `@react-three/rapier` physics (~840 KB gzip) — split into its own chunk and loaded **only** when the workshop opens.
-- `ecctrl` controller + mobile `Joystick` — lazy-loaded.
-
----
-
-## 3D Assets
-
-The scenes are authored with programmatic Three.js geometry (primitives) for reliability and a small, dependency-free bundle.
-
-To replace or augment with real GLB models (e.g. from [Poly Pizza](https://poly.pizza) or [Sketchfab](https://sketchfab.com)):
-
-1. Drop the `.glb` file into `public/assets/`.
-2. Load it in a component:
-
-```jsx
-import { useGLTF } from "@react-three/drei"
-
-function Desk() {
-  const { scene } = useGLTF("/assets/desk.glb")
-  return <primitive object={scene} scale={1} position={[0, 0.9, 0]} />
-}
-```
-
-3. Wrap it in `<Suspense>` and normalize scale/position to your scene.
-
-All exterior/interior assets are original programmatic geometry — no 2D placeholder grids are used.
-
----
+React 19 · Vite 7 · Three.js / R3F · Rapier physics (lab only) · Lenis + anime.js · oxlint · Playwright
 
 ## License
 

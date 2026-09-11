@@ -20,7 +20,7 @@ export default function InteractionPrompt({ station, onFocus }) {
     <div ref={rootRef} style={{
       position: 'fixed', bottom: '10vh', left: '50%', transform: 'translateX(-50%)',
       zIndex: 100, textAlign: 'center', pointerEvents: 'auto',
-      fontFamily: '"JetBrains Mono", monospace'
+      fontFamily: '"DM Mono", monospace'
     }}>
       <div style={{
         background: 'rgba(11,11,11,0.9)', color: '#e8e8e8',

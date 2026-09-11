@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 
@@ -54,6 +54,28 @@ function CursorMesh() {
 }
 
 export default function Cursor() {
+  const [enabled, setEnabled] = useState(false)
+
+  // Progressive enhancement: the custom cursor (and its second WebGL
+  // context) runs only on fine pointers without reduced-motion preference.
+  // Everyone else — touch, keyboard, reduced-motion — keeps the native
+  // pointer and skips the extra GPU context entirely.
+  useEffect(() => {
+    const fine = window.matchMedia("(pointer: fine)")
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const update = () => setEnabled(fine.matches && !motion.matches)
+    update()
+    fine.addEventListener("change", update)
+    motion.addEventListener("change", update)
+    return () => {
+      fine.removeEventListener("change", update)
+      motion.removeEventListener("change", update)
+      document.documentElement.classList.remove("has-custom-cursor")
+    }
+  }, [])
+
+  if (!enabled) return null
+
   return (
     <div className="cursor-layer" style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999 }}>
       <Canvas
@@ -61,6 +83,7 @@ export default function Cursor() {
         orthographic
         camera={{ zoom: 1, position: [0, 0, 1] }}
         gl={{ alpha: true, antialias: true }}
+        onCreated={() => document.documentElement.classList.add("has-custom-cursor")}
       >
         <CursorMesh />
       </Canvas>

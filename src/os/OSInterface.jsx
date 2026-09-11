@@ -6,7 +6,7 @@ export default function OSInterface({ projects }) {
   return (
     <div style={{
       width: '1024px', height: '512px', background: '#0b0b0b',
-      color: '#e8e8e8', fontFamily: '"JetBrains Mono", monospace',
+      color: '#e8e8e8', fontFamily: '"DM Mono", monospace',
       display: 'grid', gridTemplateColumns: '250px 1fr', overflow: 'hidden',
       border: '10px solid #1a1a1a'
     }}>
@@ -36,7 +36,7 @@ export default function OSInterface({ projects }) {
       <div style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {selected ? (
           <div>
-            <h1 style={{ fontSize: 24, margin: 0, color: '#fff' }}>{selected.name}</h1>
+            <h2 style={{ fontSize: 24, margin: 0, color: '#fff' }}>{selected.name}</h2>
             <p style={{ color: '#888', lineHeight: 1.6, fontSize: 14 }}>{selected.description}</p>
             <div style={{ marginTop: 20, padding: '20px', background: '#151515', border: '1px solid #222', borderRadius: '2px' }}>
               <div style={{ fontSize: 12, color: '#2f9e92', marginBottom: 10 }}>PROJECT_LOG</div>
